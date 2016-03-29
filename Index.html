@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Good Night Facilitator</title>	
+	<link href='https://fonts.googleapis.com/css?family=Playfair+Display:400,900' rel='stylesheet' type='text/css'>
+	<style type="text/css">html,body{font-family:'Playfair Display',serif;height:100%;margin:0;padding:0;background-color:#73503c}#main{position:relative;width:800px;height:650px;top:50px;margin:0 auto;border-top-right-radius:25px;border-top-left-radius:25px;border-bottom-right-radius:25px;border-bottom-left-radius:25px;background-color:#f2d8a7;-webkit-box-shadow:0px 14px 58px 13px rgba(0,0,0,.59);-moz-box-shadow:0px 14px 58px 13px rgba(0,0,0,.59);box-shadow:0px 14px 58px 13px rgba(0,0,0,.59)}#info{position:absolute;width:700px;height:190px;top:20px;left:45px;border:2px solid #591e23;background-color:#d94e67;font-size:12pt;text-align:center}#map{position:absolute;width:400px;height:380px;top:230px;left:350px;border:2px solid #591e23;background-color:#d94e67}#listing{position:absolute;width:285px;height:380px;top:230px;right:465px;border:2px solid #591e23;background-color:#d94e67}button{width:150px;height:20px;border:2px solid #000;background-color:#fff}button:hover{background-color:gray}#foodB{position:absolute;left:210px;top:150px}#drinkB{position:absolute;left:375px;top:150px}#mapB{position:absolute;left:540px;top:150px}#zip{position:absolute;left:53px;top:153px}#mic{position:absolute;left:5px;top:5px}.food,.drink{margin-left:20px}a,b{color:#000;margin-left:-5px}p,h4{margin-bottom:10px}h4{font-size:16px}hr{margin-bottom:4px}p.small{line-height:110%;margin-top:7px;font-size:12pt;margin-bottom:15px}</style>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+        <script type="text/javascript" src="http://oauth.googlecode.com/svn/code/javascript/oauth.js"></script>
+        <script type="text/javascript" src="http://oauth.googlecode.com/svn/code/javascript/sha1.js"></script>	
+		<script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.0.0/annyang.min.js"></script>
+		<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdMDe4cUfmputdXCKkNNZFmJw_fnA2tJU"></script>
+</head>
+<body>
+
+<script type="text/javascript">"use strict";(function(){var marker;var infowindow;var map;var foodButton;var drinkButton;var mapButton;var markers=[];var foodList=['Late+Night','Fast+Food','Pizza','Burger','American','Convenience+Stores'];var drinkList=['Club','Bar','Pub','Night+Club','Alcohol','Convenience+Stores'];var myLat;var chosenTerms;var myLong;var message;window.onload=init;function init(){var output=document.getElementById("map");if(annyang){var commands={'show me food':function(){doFood();},'show me drinks':function(){doDrinks();},'where am i':function(){geoFindMe();},'change zip code to *new':updateZip};annyang.addCommands(commands);annyang.start();}
+if(!navigator.geolocation){output.innerHTML="<p>Geolocation is not supported by your browser</p>";return;}
+function success(position){var latitude=position.coords.latitude;var longitude=position.coords.longitude;message="You are here";map=new google.maps.Map(document.getElementById('map'),{center:{lat:latitude,lng:longitude},zoom:13,mapTypeId:google.maps.MapTypeId.ROADMAP});addMarker(latitude,longitude,message);myLat=latitude;myLong=longitude;$("#map").fadeIn(500);}
+function error(){output.innerHTML="Unable to retrieve your location";}
+output.innerHTML="<p>Locating…</p>";foodButton=document.querySelector('#foodB');foodButton.addEventListener('click',doFood);drinkButton=document.querySelector('#drinkB');drinkButton.addEventListener('click',doDrinks);mapButton=document.querySelector('#mapB');mapButton.addEventListener('click',geoFindMe);navigator.geolocation.getCurrentPosition(success,error);}
+function geoFindMe(){addMarker(myLat,myLong,message);}
+function getData(list){var auth={consumerKey:"KkTp1px7GtmHHl_frDInrQ",consumerSecret:"3wFuqtPv1ZZn_bQiNHcTqwMCf0Y",accessToken:"YcK4nRZrOO9R0EykjN7aQTAxGf4fXSTF",accessTokenSecret:"omwIe408Pk-dCR3Y_DXmSd19cQM",serviceProvider:{signatureMethod:"HMAC-SHA1"}};var termslist=list;var num=getRandomInt(1,6);var term=termslist[num-1];var near=document.querySelector("#searchterm").value;near=near.trim();if(near.length<1){near="14623";}
+var lat=43.0819831;var lng=-77.6837692;var quantity=8;var accessor={consumerSecret:auth.consumerSecret,tokenSecret:auth.accessTokenSecret};var parameters=[];parameters.push(['term',term]);parameters.push(['location',near]);parameters.push(['limit',quantity]);parameters.push(['callback','cb']);parameters.push(['oauth_consumer_key',auth.consumerKey]);parameters.push(['oauth_consumer_secret',auth.consumerSecret]);parameters.push(['oauth_token',auth.accessToken]);parameters.push(['oauth_signature_method','HMAC-SHA1']);var message={'action':'http://api.yelp.com/v2/search','method':'GET','parameters':parameters};OAuth.setTimestampAndNonce(message);OAuth.SignatureMethod.sign(message,accessor);var parameterMap=OAuth.getParameterMap(message.parameters);$.ajax({'url':message.action,'data':parameterMap,'dataType':'jsonp','jsonpCallback':'cb','success':dataLoaded});}
+function dataLoaded(obj){if(obj.error){var status=obj.status;var description=obj.description;document.querySelector("#listing").innerHTML="<h3><b>Error!</b></h3>"+"<p><i>"+status+"</i><p>"+"<p><i>"+description+"</i><p>";$("#listing").fadeIn(500);return;}
+if(obj.total_items==0){var status="No results found";document.querySelector("#listing").innerHTML="<p><i>"+status+"</i><p>"+"<p><i>";$("#listing").fadeIn(500);return;}
+var allFoods=obj.businesses;var bigString="<h4>Top Recommendations Near You</h4>";bigString+="<hr />";var html="";clearMarkers();geoFindMe();for(var i=0;i<8;i++){var food=allFoods[i];var lat=Number(food.location.coordinate.latitude);var lng=Number(food.location.coordinate.longitude);var title=food.name;if(i<3){var rating=food.rating;var site=food.mobile_url;var address=food.location.address;var city=food.location.city;var phone=food.display_phone;if(!site)site="https://www.google.com";if(!rating)rating="No Rating Found"
+if(!title)title="No Title found";if(!address)address="No Address found";if(!city)city="No City Found";if(!phone)phone="No Phone Number Found";html+="<div class= 'food'>";html+="<b><a href="+site+">"+title+"</a></b><br>";html+="<p class = 'small'>Located: "+address+"<br>";html+="City: "+city+"<br>";html+="Rating: "+rating+" Out of 5 Stars<br>";html+="Phone: "+phone+"</p>";html+="</div>";}
+if(lat&&lng){addMarker(lat,lng,title);}}
+zoomOnFirstResult();bigString+=html;document.querySelector("#listing").innerHTML=bigString;$("#listing").fadeIn(500);}
+function doDrinks(){chosenTerms=drinkList;getData(chosenTerms);}
+function doFood(){chosenTerms=foodList;getData(chosenTerms);}
+function updateZip(zip){var newZip=zip;document.getElementById("searchterm").value=newZip;}
+function addMarker(latitude,longitude,title){var position={lat:latitude,lng:longitude};var marker=new google.maps.Marker({position:position,map:map,animation:google.maps.Animation.DROP})
+marker.setTitle(title);google.maps.event.addListener(marker,'click',function(e){makeInfoWindow(this.position,this.title);});markers.push(marker);}
+function zoomOnFirstResult(){if(markers.length==0)return;marker=markers[1];var lat1=Number(marker.latitude);var lng1=Number(marker.longitude);map.panTo(marker.getPosition());map.setZoom(11);}
+function clearMarkers(){if(markers.length==0)return;if(infowindow)infowindow.close();for(var i=0;i<markers.length;i++){var mark=markers[i];mark.setMap(null);}
+markers=[];}
+function makeInfoWindow(position,msg){if(infowindow)infowindow.close();infowindow=new google.maps.InfoWindow({map:map,position:position,content:"<b>"+msg+"</b>"});}
+function getRandomInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}})();</script>
+<div id="main">
+<div id="info"> <h2> Good Night Facilitator</h2> <p> Need a post-exam drink? Some late night munchies? We can help with that. <br> Enter a zip code or click a button to use your current location.<br> Use a mic to enter voice commands</p>
+<p><button id="foodB">I'm Starving</button></p> 
+<p><button id="drinkB">I Need A Drink</button></p>
+<p><button id="mapB">Where Am I?</button></p></div> 
+<p id="zip"> Enter Your Zip: <input id="searchterm" type="text" size="6" maxlength="5" autofocus value="14623"/></p> 
+<div id="map"><div id="out"></div></div>
+<div id="listing"></div>
+</div>
+</body>
+</html>
